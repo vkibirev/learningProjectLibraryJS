@@ -1,14 +1,8 @@
 let read = require('readline-sync');
 let mainMenu = function() {
     
-    console.log('\nLibrary');    
-    console.log(`
-    1: List all
-    2: Search
-    3: Add
-    4: Rate
-    5: Clear
-    6: Reload`);
+    console.log('\nLibrary\n');    
+    console.log(`1: List all\n2: Search\n3: Add\n4: Rate\n5: Clear\n6: Reload`);    
 
     let selectedItem = read.question();
     switch(selectedItem) {
@@ -48,13 +42,8 @@ let listAll = function() {
 
 let search = function() {
 
-    console.log('\nSearch');
-    console.log(`
-    1: By title
-    2: By author
-    3: By genre
-    4: By rating
-    5: Back`);
+    console.log('\nSearch\n');
+    console.log(`1: By title\n2: By author\n3: By genre\n4: By rating\n5: Back`);
 
     let selectedItem = read.question();
     switch (selectedItem) {
@@ -78,9 +67,48 @@ let search = function() {
         case 'Back':
             mainMenu();
             break;
-            
-            
+        default:
+            console.log('Incorrect item had been chosen');
+            break;        
     }
+}
+
+let add = function() {
+    console.log('\nAdd entity\n');
+    console.log(`1: Author\n2: Book\n3: Back`);
+
+    let selectedItem = read.question();
+    switch (selectedItem) {
+        case '1':
+        case 'Author':
+            console.log('add author');
+            break;
+        case '2':
+        case 'Book':
+            console.log('add book');
+            break;
+        case '3':        
+        case 'Back':
+            mainMenu();
+            break;
+        default:
+            console.log('Incorrect item had been chosen');
+            break;        
+    }
+}
+
+let rate = function() {
+    console.log('\nBook ID\n');
+}
+
+let clear = function() {
+    console.log('\nLibrary is empty now\n');
+    mainMenu();    
+}
+
+let reload = function() {
+    process.stdout.write("\u001b[2J\u001b[0;0H");
+    mainMenu();
 }
 
 mainMenu();
