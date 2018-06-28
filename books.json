@@ -1,1 +1,1 @@
-[{"bookTitle":"testTitle","author":"test"},{"bookTitle":"testTitle1","author":"test"},{"bookTitle":"testTitle","author":"test"}]
+[{"bookTitle":"Book1","author":"test","rate":1},{"bookTitle":"Book2","author":"test","rate":5},{"bookTitle":"Book3","author":"test","rate":10}]
