@@ -1,5 +1,8 @@
 const readLine = require('readline-sync');
 const fs = require('fs');
+const sinon = require('sinon');
+
+// const myQuestion = sinon.stub(readLine, 'question');
 
 //Function that save data into JSON 
 let saveData = function (data, filePath) {
@@ -11,6 +14,13 @@ let readFile = function (filePath) {
     let str = fs.readFileSync(filePath).toString();
     return JSON.parse(str);
 }
+
+const db = 
+{
+    books: readFile('books.json'),
+    authors: readFile('authors.json')
+};
+
 //Search function, uses for comparing data from JOSN and cmd
 let foundAuthor = function (data, value) {
     for (let i = 0; i < data.length; ++i) {
@@ -25,12 +35,7 @@ let adder = function(type, filePath) {
     
     switch(type) {        
         case 'author':        
-            let tempAuthors = {}; //temprorary object that nis needed for adding author information
-            let dataAuthors = []; //array  of objects that collect all information about added autors and uses for adding it to JSON
-            let existingAuthors = readFile('authors.json');
-            if (existingAuthors) {
-                dataAuthors = existingAuthors;
-            }            
+            let tempAuthors = {}; //temprorary object that is needed for adding author information
             console.log('Adding new author');
             //Check if autor name field isn't empty and author doesn't exist
             while(true){
@@ -40,7 +45,7 @@ let adder = function(type, filePath) {
                     console.log(`Field can't be empty`);
                     continue;
                 } 
-                if (foundAuthor(dataAuthors, authorName)) {
+                if (foundAuthor(db['authors'], authorName)) {
                     console.log('Author already exists. Please add newone\n');
                     continue;                        
                 }
@@ -67,34 +72,28 @@ let adder = function(type, filePath) {
                 tempAuthors.genre = authorGenre;
                 break;
             }
-            dataAuthors.push(tempAuthors); //add object with new author into array of objects with all previously added authors
-            saveData(dataAuthors, 'authors.json'); //save array of objects with authors into JSON
+            db['authors'].push(tempAuthors); //add object with new author into array of objects with all previously added authors
+            saveData(db['authors'], 'authors.json'); //save array of objects with authors into JSON
             add();         
             break;
         case 'book':
         default:
             let tempBooks = {}; //temprorary object that nis needed for adding books information
-            let dataBooks = []; //array of objects that collect all information about added books and uses for adding it to JSON
-            let authorsList = readFile('authors.json'); 
-            existingBooks = readFile('books.json');
-            if (existingBooks) {
-                dataBooks = existingBooks;
-            }
 
             let bookTitle = readLine.question('Title: ');
             tempBooks.bookTitle = bookTitle;
             //Check if aouthor that should be used for adding book is presented in the authors.json
             while(true) {
                 let bookAuthor = readLine.question('Author: ');
-                if (foundAuthor(authorsList, bookAuthor)) {                    
+                if (foundAuthor(db['authors'], bookAuthor)) {                    
                     tempBooks.author = bookAuthor;
                     break;
                 }
                 console.log('Incorrect author\n');
             }
             tempBooks.rate = 0; //Add default zero rate for each book
-            dataBooks.push(tempBooks);
-            saveData(dataBooks, 'books.json');
+            db['books'].push(tempBooks);
+            saveData(db['books'], 'books.json');
             add();
             break;
     }
@@ -141,15 +140,13 @@ let mainMenu = function() {
 
 //Function that is displayed all added authors and books
 let listAll = function() {    
-    let authorsList = readFile('authors.json');
-    let booksList = readFile('books.json');
     console.log('\nAuthors: \n');
-    for (let i = 0; i < authorsList.length; ++i) {
-        console.log(`${i+1}: ${authorsList[i].name}(${authorsList[i].lang}). ${authorsList[i].genre}`);        
+    for (let i = 0; i < db['authors'].length; ++i) {
+        console.log(`${i+1}: ${db['authors'][i].name}(${db['authors'][i].lang}). ${db['authors'][i].genre}`);        
     }
     console.log('\nBooks: \n');
-    for (let i = 0; i < booksList.length; ++i) {
-        console.log(`${i+1}: ${booksList[i].bookTitle}(${booksList[i].author}). Rating: ${booksList[i].rate}`);        
+    for (let i = 0; i < db['books'].length; ++i) {
+        console.log(`${i+1}: ${db['books'][i].bookTitle}(${db['books'][i].author}). Rating: ${db['books'][i].rate}`);        
     }
     mainMenu();    
 };
@@ -158,8 +155,6 @@ let search = function() {
 
     console.log('\nSearch\n');
     console.log(`1: By title\n2: By author\n3: By genre\n4: By rating\n5: Back\n`);
-    let booksList = readFile('books.json');
-    let authorsList = readFile('authors.json');
 
     let selectedItem = readLine.question();
     switch (selectedItem) {
@@ -168,16 +163,17 @@ let search = function() {
 
             let bookTitle = readLine.question('Title: \n');
 
-                for (let i = 0; i < booksList.length; ++i) {
+                for (let i = 0; i < db['books'].length; ++i) {
                     let matchAuthor = 0;
-                    if (bookTitle === booksList[i].bookTitle) {
+                    if (bookTitle === db['books'][i].bookTitle) {
                         
-                        for (j = 0; i < authorsList; ++j) {
-                            if (authorsList[j].name === booksList[i].author) {
+                        for (j = 0; j < db['authors'].length; ++j) {
+                            if (db['books'][j].name === db['authors'][i].author) {
                                 matchAuthor = j;
-                            }
-                        }
-                        console.log(`\n${booksList[i].bookTitle}(${booksList[i].author}). Genre: ${authorsList[matchAuthor].genre}. Rating: ${booksList[i].rate}.`);                                                
+                            }                            
+                        }                       
+                        
+                        console.log(`\n${db['books'][i].bookTitle}(${db['books'][i].author}). Genre: ${db['authors'][matchAuthor].genre}. Rating: ${db['books'][i].rate}.`);                                                
                     } 
                 }                
                 search();
@@ -185,11 +181,11 @@ let search = function() {
         case '2':
         case 'By author':
             let authorName = readLine.question('Author: \n');
-            for (let i = 0; i < authorsList.length; ++i) { 
-                if (authorName === authorsList[i].name) {
-                    for (let j = 0; j < booksList.length; ++j) {
-                        if (authorsList[i].name === booksList[j].author){
-                            console.log(`\n${booksList[j].bookTitle}(${booksList[j].author}). Genre: ${authorsList[i].genre}. Rating: ${booksList[j].rate}.`); //One problem here - if we manually add into JSON file object with same authors both of them will be displayed
+            for (let i = 0; i < db['authors'].length; ++i) { 
+                if (authorName === db['authors'][i].name) {
+                    for (let j = 0; j < db['books'].length; ++j) {
+                        if (db['authors'][i].name === db['books'][j].author){
+                            console.log(`\n${db['books'][j].bookTitle}(${db['books'][j].author}). Genre: ${db['authors'][i].genre}. Rating: ${db['books'][j].rate}.`); //One problem here - if we manually add into JSON file object with same authors both of them will be displayed
                         }                        
                     }
                 }
@@ -199,11 +195,11 @@ let search = function() {
         case '3':
         case 'By genre':
             let authorGenre = readLine.question('Genre: \n');
-            for (let i = 0; i < authorsList.length; ++i) { 
-                if (authorGenre === authorsList[i].genre) {
-                    for (let j = 0; j < booksList.length; ++j) { 
-                        if (authorsList[i].name === booksList[j].author){
-                            console.log(`\n${booksList[j].bookTitle}(${booksList[j].author}). Genre: ${authorsList[i].genre}. Rating: ${booksList[j].rate}.`); 
+            for (let i = 0; i < db['authors'].length; ++i) { 
+                if (authorGenre === db['authors'][i].genre) {
+                    for (let j = 0; j < db['books'].length; ++j) { 
+                        if (db['authors'][i].name === db['books'][j].author){
+                            console.log(`\n${db['books'][j].bookTitle}(${db['books'][j].author}). Genre: ${db['authors'][i].genre}. Rating: ${db['books'][j].rate}.`); 
                         }                        
                     }
                 }
@@ -222,10 +218,10 @@ let search = function() {
                     case '1':
                     case 'Less':
                         let lessThan = readLine.question('Less than: ');
-                        for (let i = 0; i < booksList.length; ++i) { // two FORs are used to collect data from two dofferent JSON (especialli it is needed to display genre data that palced in 'authors JSON', not in the 'books.json')
-                            for (let j = 0; j < booksList.length; ++j) {
-                                if (authorsList[i].name === booksList[j].author && booksList[j].rate < lessThan){
-                                    console.log(`\n${booksList[j].bookTitle}(${booksList[j].author}). Genre: ${authorsList[i].genre}. Rating: ${booksList[j].rate}.`); 
+                        for (let i = 0; i < db['books'].length; ++i) { // two FORs are used to collect data from two dofferent JSON (especialli it is needed to display genre data that palced in 'authors JSON', not in the 'books.json')
+                            for (let j = 0; j < db['books'].length; ++j) {
+                                if (db['authors'][i].name === db['books'][j].author && db['books'][j].rate < lessThan){
+                                    console.log(`\n${db['books'][j].bookTitle}(${db['books'][j].author}). Genre: ${db['authors'][i].genre}. Rating: ${db['books'][j].rate}.`); 
                                 }
                             }
                         }
@@ -234,10 +230,10 @@ let search = function() {
                     case '2':
                     case 'Greater':
                         let greaterThan = readLine.question('Greater than: ');
-                        for (let i = 0; i < booksList.length; ++i) { // two FORs are used to collect data from two dofferent JSON (especialli it is needed to display genre data that palced in 'authors JSON', not in the 'books.json')
-                            for (let j = 0; j < booksList.length; ++j) {
-                                if (authorsList[i].name === booksList[j].author && booksList[j].rate > greaterThan){
-                                    console.log(`\n${booksList[j].bookTitle}(${booksList[j].author}). Genre: ${authorsList[i].genre}. Rating: ${booksList[j].rate}.`); 
+                        for (let i = 0; i < db['books'].length; ++i) { // two FORs are used to collect data from two dofferent JSON (especialli it is needed to display genre data that palced in 'authors JSON', not in the 'books.json')
+                            for (let j = 0; j < db['books'].length; ++j) {
+                                if (db['authors'][i].name === db['books'][j].author && db['books'][j].rate > greaterThan){
+                                    console.log(`\n${db['books'][j].bookTitle}(${db['books'][j].author}). Genre: ${db['authors'][i].genre}. Rating: ${db['books'][j].rate}.`); 
                                 }                        
                             }
                             
@@ -296,22 +292,17 @@ let add = function() {
 }
 //Menu "Rate" function
 let rate = function() {  
-    let dataRate = [];    
     let bookId = readLine.question('\nBook ID: \n');
-    let bookList = readFile('books.json');
-    if (bookList) {
-        dataRate = bookList; 
-    }          
-    if (dataRate.length === 0) {        
+    if (db['books'].length === 0) {        
         console.log('Please add at least one book');
         mainMenu();                        
     } else if (bookId === null || bookId === '') {
         console.log('Incorrect book ID');
         rate();
     } else {
-        ++dataRate[bookId-1].rate;
-        console.log(`\nRating: ${dataRate[bookId-1].rate}`);
-        saveData(dataRate, 'books.json');
+        ++db['books'][bookId-1].rate;
+        console.log(`\nRating: ${db['books'][bookId-1].rate}`);
+        saveData(db['books'], 'books.json');
         mainMenu();
     }
 }
