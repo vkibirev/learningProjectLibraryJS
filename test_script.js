@@ -1,16 +1,23 @@
 const readLine = require('readline-sync');
 const fs = require('fs');
+const chai = require('chai');
+const expect = chai.expect;
 
 const sinon = require('sinon');
-const myQuestion = sinon.stub(readLine, 'question');
+
+// const myQuestion = sinon.stub(readLine, 'question');
 const baseScenario = [
     'Clear', 'Add', 'Author', '', 'test', '', 'en', 'Back', 'List All', 
-    'Add', 'Book', 'Book1', 'test', 'comedy', 'Back', 'List All', 'Exit'    
+    'Add', 'Book', 'Book1', 'test', 'comedy', 'Back', 'List All', 
+    'Rate', '1', 'List All', 
+    'Search', 'By Title', '', 'By Title', 'Book', 'By Title', 'Book1', 'Back',
+    'Search', 'By Author', 'fdsfds', 'By Author', 'test1', 'By Author', 'test', 'Back',
+    'Exit',    
 ];
 
-for (let i = 0; i < baseScenario.length; ++i) {
-    myQuestion.onCall(i).returns(baseScenario[i]);
-}
+// for (let i = 0; i < baseScenario.length; ++i) {  
+//     myQuestion.onCall(i).returns(baseScenario[i]);
+// }
 
 //Function that save data into JSON 
 let saveData = function (data, filePath) {
@@ -82,21 +89,22 @@ let listAll = function() {
     let showAllAuthors = showFactory('authors');
     let showAllBooks = showFactory('books');
 
-    showAllAuthors('\nAll Authors: \n');
-    showAllBooks('\nAll Books: \n');
+    console.log(showAllAuthors('\nAll Authors: \n'));     
+    console.log(showAllBooks('\nAll Books: \n'));
 };
 
 function showFactory(type) {
     function show(ListName) {
         let storage = db[type];
+        let searchResultString = '';
         console.log(ListName);        
         for (let i = 0; i < storage.length; ++i) {
-            let item = storage[i];
+            let item = storage[i];            
             for (let key in item) {
-                console.log(`${key[0].toUpperCase() + key.slice(1)} : ${item[key]}`);
-            }
-            console.log('-'.repeat(20));
-        }
+                searchResultString += ` ${key[0].toUpperCase() + key.slice(1)}: ${item[key]};`;
+            }            
+        }        
+        return searchResultString;
     }
     return show;
 }
@@ -127,6 +135,9 @@ function isValid(val, validators) {
                     let item = props.among[i];
                     if(item[props.field] === val) {
                         return true;
+                    } 
+                    else {
+                        return false;
                     }                 
                 }
                 break;
@@ -194,7 +205,6 @@ function searchResultiSValid(val, validators) {
                 return temp; 
         }
     }
-    // return false;
 }
 
 //Function for displaying collected search results
@@ -278,16 +288,16 @@ let rate = function() {
     } else {
         ++db['books'][bookId-1].rate;
         console.log(`\nRating: ${db['books'][bookId-1].rate}`);
-        saveData(db['books'], 'books.json');
+        //saveData(db['books'], 'books.json');
     }
 }
 
 //Menu "Clear" function
-let clear = function() {
-    db['books'] = [];
-    db['authors'] = [];
+let clear = function() {    
+    db['books'].length = [];
+    db['authors'].length = [];
     console.log('\nLibrary is empty now\n');
-    saveData(db['books'], 'authors.json');
+    saveData(db['authors'], 'authors.json');
     saveData(db['books'], 'books.json');    
 }
 
@@ -408,3 +418,10 @@ const searchSchemas = {
 };
 
 interact(menus.main);
+
+// describe('Default Behaviour', function() {
+//     it('Book with titile Book1 should be displayed', function() {
+//         this.skip();
+//     })
+// })
+
